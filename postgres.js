@@ -1,7 +1,6 @@
 var pg = require("pg");
 var winston = require("winston");
 var through = require("through2").obj;
-var async = require("async");
 
 module.exports = pgStream;
 

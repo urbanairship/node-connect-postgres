@@ -15,7 +15,6 @@
   "author": "Urban Airship",
   "license": "APACHE 2.0",
   "dependencies": {
-    "async": "^2.6.1",
     "pg": "^6.1.5",
     "through2": "^2.0.3",
     "urban-airship-connect": "^1.1.0",
