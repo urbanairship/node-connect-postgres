@@ -13,7 +13,7 @@
     "refresh": "psql --dbname $DB_NAME --host $PGHOST --port $PGPORT -U $APP_USER -c 'REFRESH MATERIALIZED VIEW tag_windows'"
   },
   "author": "Urban Airship",
-  "license": "MIT",
+  "license": "APACHE 2.0",
   "dependencies": {
     "async": "^2.6.1",
     "pg": "^6.1.5",
