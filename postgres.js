@@ -82,7 +82,7 @@ function pgStream(app, config, ready) {
       })
       .catch(function(err) {
         winston.error(err);
-        ready(err);
+        cb(err);
       });
   }
 
