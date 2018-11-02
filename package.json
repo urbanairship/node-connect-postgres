@@ -1,0 +1,24 @@
+{
+  "name": "connect-postgres",
+  "version": "1.0.0",
+  "description": "example connect integration which puts urban airship data into postgres",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: there are no tests\" && exit 1",
+    "create": "createuser -h $PGHOST -p $PGPORT -D -R $APP_USER && createdb -h $PGHOST -p $PGPORT -O $APP_USER $DB_NAME",
+    "rm": "dropdb -h $PGHOST -p $PGPORT ${DB_NAME} && dropuser -h $PGHOST -p $PGPORT $APP_USER ",
+    "schema": "cat schema-template.sql | sed \"s:\\$APP_USER:$APP_USER:g\" > ${APP_USER}_schema.sql && psql --dbname $DB_NAME --host $PGHOST --port $PGPORT -U $APP_USER --file ${APP_USER}_schema.sql",
+    "connect": "psql --dbname $DB_NAME --host $PGHOST --port $PGPORT -U $APP_USER",
+    "start": "node index.js",
+    "refresh": "psql --dbname $DB_NAME --host $PGHOST --port $PGPORT -U $APP_USER -c 'REFRESH MATERIALIZED VIEW tag_windows'"
+  },
+  "author": "Urban Airship",
+  "license": "APACHE 2.0",
+  "dependencies": {
+    "pg": "^6.1.5",
+    "through2": "^2.0.3",
+    "urban-airship-connect": "^1.1.0",
+    "winston": "^3.1.0",
+    "xtend": "^4.0.1"
+  }
+}
