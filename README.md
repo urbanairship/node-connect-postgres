@@ -83,9 +83,16 @@ Now you can see what you've got:
 SELECT * FROM events LIMIT 10; 
 -- look at some of the tag windows in the materialized view
 SELECT * FROM tag_windows LIMIT 10;
+
 -- view the 100 most recently inserted events, their event type, offset, and
 -- when they occurred
-SELECT resume_offset, event_type, insert_time, (event->>'occurred')::timestamp as occurred FROM events ORDER BY insert_time DESC LIMIT 100;
+SELECT DISTINCT resume_offset, event_type, insert_time, (event->>'occurred')::timestamp as occurred FROM events ORDER BY insert_time DESC LIMIT 100;
+
+-- connect may emit the same event twice. In most cases (excluding duplicates
+-- emitted by the underlying source) we can dedupe on a unique identifier
+WITH event_id_counts AS (
+    SELECT count(*) as n_dupes FROM events GROUP BY event->>'id'
+) SELECT n_dupes, count(*) as count_of_events_with_n_dupes FROM event_id_counts GROUP BY n_dupes;
 ```
 
 To drop the database, the tables, and the app user.

@@ -32,51 +32,53 @@ CREATE INDEX events_index ON events (
 -- have to issue a `REFRESH MATERIALIZED VIEW CONCURRENTLY tag_windows` on a
 -- regular schedule, or else the results will become very stale.
 CREATE MATERIALIZED VIEW tag_windows AS
-    with tags as (
-        select 
-            event->>'id' as event_id,
-            (event->>'occurred')::timestamp as occurred,
+    WITH tags AS (
+        -- we select distinct on event id to avoid duplicate events
+        SELECT DISTINCT ON (event->>'id')
+            event->>'id' AS event_id,
+            (event->>'occurred')::timestamp AS occurred,
             channel,
-            adds.key as add_cls, 
-            removes.key as rm_cls, 
-            jsonb_array_elements_text(adds.value) as add_val,
-            jsonb_array_elements_text(removes.value)  as rm_val,
-            event->'device'->'named_user_id' as named_user
-            from events ,
-                lateral jsonb_each(event#>'{body,add}') as adds,
-                lateral jsonb_each(event#>'{body,remove}') as removes
-                where event_type ='TAG_CHANGE'
-    ), added as (select 
+            adds.key AS add_cls,
+            removes.key AS rm_cls,
+            jsonb_array_elements_text(adds.value) AS add_val,
+            jsonb_array_elements_text(removes.value)  AS rm_val,
+            event->'device'->'named_user_id' AS named_user
+            FROM events ,
+                lateral jsonb_each(event#>'{body,add}') AS adds,
+                lateral jsonb_each(event#>'{body,remove}') AS removes
+                WHERE event_type ='TAG_CHANGE'
+    ), added AS (SELECT
         event_id,
-        channel, 
+        channel,
         named_user,
         occurred,
-        add_cls as cls,
-        add_val as tag 
-        from tags
-    ), removed as (select 
+        add_cls AS cls,
+        add_val AS tag
+        FROM tags
+    ), removed AS (SELECT
         event_id,
-        channel, 
+        channel,
         named_user,
         occurred,
-        rm_cls as cls,
-        rm_val as tag 
-        from tags 
+        rm_cls AS cls,
+        rm_val AS tag
+        FROM tags
     )
-    select 
-        coalesce(added.named_user, removed.named_user) as named_user,
-        coalesce(added.channel, removed.channel) as channel,
-        coalesce(added.cls, removed.cls) as cls,
-        coalesce(added.tag, removed.tag) as tag,
-        added.occurred as added_at,
-        removed.occurred as removed_at,
-        added.event_id as add_event,
-        removed.event_id as remove_event
-        from added full join removed on(
-            added.channel = removed.channel and 
-            added.tag = removed.tag and 
+    SELECT
+        coalesce(added.named_user, removed.named_user) AS named_user,
+        coalesce(added.channel, removed.channel) AS channel,
+        coalesce(added.cls, removed.cls) AS cls,
+        coalesce(added.tag, removed.tag) AS tag,
+        added.occurred AS added_at,
+        removed.occurred AS removed_at,
+        added.event_id AS add_event,
+        removed.event_id AS remove_event
+        FROM added full JOIN removed ON(
+            added.channel = removed.channel AND
+            added.tag = removed.tag AND
             added.occurred < removed.occurred
-        );
+        )
+        ORDER BY named_user, channel;
 
 CREATE INDEX tag_windows_index ON tag_windows (
     cls, tag
