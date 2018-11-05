@@ -81,6 +81,10 @@ Now you can see what you've got:
 ```sql
 -- just look at some events
 SELECT * FROM events LIMIT 10; 
+-- pretty print the first three tag events
+SELECT jsonb_pretty(event) FROM events WHERE event_type = 'TAG_CHANGE' LIMIT 3;
+-- pretty print the next three tag events
+SELECT jsonb_pretty(event) FROM events WHERE event_type = 'TAG_CHANGE' LIMIT 3 offset 3;
 -- look at some of the tag windows in the materialized view
 SELECT * FROM tag_windows LIMIT 10;
 
