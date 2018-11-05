@@ -42,45 +42,30 @@ CREATE MATERIALIZED VIEW tag_windows AS
             removes.key AS rm_cls,
             jsonb_array_elements_text(adds.value) AS add_val,
             jsonb_array_elements_text(removes.value)  AS rm_val,
-            event->'device'->'named_user_id' AS named_user
-            FROM events ,
+            event->'device'->>'named_user_id' AS named_user_id
+            FROM events,
                 lateral jsonb_each(event#>'{body,add}') AS adds,
                 lateral jsonb_each(event#>'{body,remove}') AS removes
                 WHERE event_type ='TAG_CHANGE'
-    ), added AS (SELECT
-        event_id,
-        channel,
-        named_user,
-        occurred,
-        add_cls AS cls,
-        add_val AS tag
-        FROM tags
-    ), removed AS (SELECT
-        event_id,
-        channel,
-        named_user,
-        occurred,
-        rm_cls AS cls,
-        rm_val AS tag
-        FROM tags
     )
     SELECT
-        coalesce(added.named_user, removed.named_user) AS named_user,
+        coalesce(removed.named_user_id, added.named_user_id) AS named_user_id,
         coalesce(added.channel, removed.channel) AS channel,
-        coalesce(added.cls, removed.cls) AS cls,
-        coalesce(added.tag, removed.tag) AS tag,
+        coalesce(added.add_cls, removed.rm_cls) AS cls,
+        coalesce(added.add_val, removed.rm_val) AS tag,
         added.occurred AS added_at,
         removed.occurred AS removed_at,
         added.event_id AS add_event,
         removed.event_id AS remove_event
-        FROM added full JOIN removed ON(
+        FROM tags as added full JOIN tags as removed ON(
             added.channel = removed.channel AND
-            added.tag = removed.tag AND
+            added.add_val = removed.rm_val AND
+            added.add_cls = removed.rm_cls AND
             added.occurred < removed.occurred
         )
-        ORDER BY named_user, channel;
+        ORDER BY named_user_id, channel;
 
 CREATE INDEX tag_windows_index ON tag_windows (
-    cls, tag
+    cls, tag, named_user_id, channel
 );
 
