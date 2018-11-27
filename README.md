@@ -38,7 +38,7 @@ LOG_LEVEL="info"
 UA_APP_KEY=
 # The authentication credential for UA connect
 UA_CONNECT_TOKEN=
-# If you have a specific connect query you'd like to execute (rather than just
+# If you have a specific connect query you'd like to execute, rather than just
 # `{}`, you would specify it here. See the connect docs for 
 # details: https://docs.urbanairship.com/api/connect/#operation/api/events/post/requestbody
 UA_CONNECT_QUERY=
@@ -53,11 +53,6 @@ npm run create
 # schema in the database
 npm run schema
 ```
-
-> Note that the project ships with a [materialized view] for viewing the time 
-> spans during which a device has been associated with its tags. There's no
-> `refresh` script shipped with this project, but you can just run `REFRESH
-> MATERIALIZED VIEW tag_windows` to use it.
 
 And now start the app. It consumes from connect and inserts the resulting data  
 into the your configured postgres instance. Stop it with ctrl+c.
